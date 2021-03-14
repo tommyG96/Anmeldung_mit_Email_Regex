@@ -1,0 +1,21 @@
+﻿
+@* 
+   Erstellt das Grundgerüst der Webseite, bestehend aus dem fixen Teil links sowie oben (Navbar, Header) 
+   und dem variablen Teil (body), der je nach Navigation andere Informationen anzeigt.
+*@
+
+@inherits LayoutComponentBase
+
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <div class="main">
+        <div class="top-row px-4">
+            Erstellt von Thomas Gärner am 15.03.2021 zur LAP
+        </div>
+
+        <div class="content px-4">
+            @Body
+        </div>
+    </div>
