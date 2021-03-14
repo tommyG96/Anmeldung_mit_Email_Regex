@@ -112,7 +112,7 @@
                 <label for="pwd">Password:</label>
             </div>
             <div class="col-75">
-                <input type="password" id="pwd" name="pwd" placeholder="Ihr Passwort"
+                <input type="password" id="pwd" placeholder="Ihr Passwort"
                        pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
                        title="Passwort muss mindestens einen Groß-& Kleinbuchstaben und eine Zahl enthalten, und mindestens 8 Zeichen lang sein" required>
             </div>
@@ -147,11 +147,7 @@
         {
             QueryEmail = param.First();
         }
-        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("pwd", out param))
-        {
-            QueryPassword = param.First();
-        }
-        if (QueryEmail != null && QueryPassword != null)
+        if (QueryEmail != null)
         {
             Anmeldungerfolgt = true;
         }

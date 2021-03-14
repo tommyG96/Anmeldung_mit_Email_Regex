@@ -1,0 +1,274 @@
+﻿@page "/suche_zeitraum"
+
+@using DataLibrary
+@using Microsoft.AspNetCore.WebUtilities
+@using BlazorServer.Models
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration _config
+@inject NavigationManager UriHelper
+@inject IDataAccess _data
+
+
+<h3>Impfanmeldung</h3>
+
+
+@if (impfen == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <style>
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #dddddd;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        input[type=text], input[type=email], input[type=password], input[type=datetime-local], input[type=radio], select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        label {
+            padding: 12px 12px 12px 0;
+            display: inline-block;
+        }
+
+        input[type=submit] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
+        }
+
+            input[type=submit]:hover {
+                background-color: #45a049;
+            }
+
+        .container {
+            width: 100%;
+            border-radius: 5px;
+            background-color: #f2f2f2;
+            padding: 20px;
+        }
+
+        .col-25 {
+            float: left;
+            width: 25%;
+            margin-top: 6px;
+        }
+
+        .col-75 {
+            float: left;
+            width: 75%;
+            margin-top: 6px;
+        }
+
+        /* Clear floats after the columns */
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        /* Responsive layout - when the screen is less than 600px wide, make the two columns stack on top of each other instead of next to each other */
+        @@media screen and (max-width: 600px) {
+            .col-25, .col-75, input[type=submit] {
+                width: 100%;
+                margin-top: 0;
+            }
+        }
+    </style>
+    <br />
+    <br />
+    <div class="container">
+        <form>
+            <div class="row">
+                <div class="col-25">
+                    <label for="Vorname">Vorname: </label>
+                </div>
+                <div class="col-75">
+                    <input @bind="Vorname" type="text" id="Vorname" name="Vorname" pattern="[a-zA-ZäÄöÖüÜß][a-zA-ZäÄöÖüÜß\s]*" title="Bitte Vornamen eingeben" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-25">
+                    <label for="Nachname">Nachname: </label>
+                </div>
+                <div class="col-75">
+                    <input @bind="Nachname" type="text" id="Nachname" name="Nachname" pattern="[a-zA-ZäÄöÖüÜß][a-zA-ZäÄöÖüÜß\s]*" title="Bitte Nachnamen eingeben" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-25">
+                    <label for="aktullesMonat">Aktuelles Monat: </label>
+                </div>
+                <div class="col-75">
+                    <input @onchange="@((args) => zeitraum = Int32.Parse(args.Value.ToString()))" type="radio" id="aktuellesMonat" name="Zeitraum" value="1">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-25">
+                    <label for="vorherigesMonat">Vorheriges Monat: </label>
+                </div>
+                <div class="col-75">
+                    <input @onchange="@((args) => zeitraum = Int32.Parse(args.Value.ToString()))" type="radio" id="vorherigesMonat" name="Zeitraum" value="2">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-25">
+                    <label for="gesamt">Gesamter Zeitraum: </label>
+                </div>
+                <div class="col-75">
+                    <input @onchange="@((args) => zeitraum = Int32.Parse(args.Value.ToString()))" type="radio" id="gesamt" name="Zeitraum" value="3">
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <input type="submit" @onclick="@(async () => await InsertData(Vorname, Nachname, Geburtsdatum, zeitraum))" />
+            </div>
+        </form>
+    </div>
+
+    @if (Anmeldungerfolgt)
+    {
+        <h5>Die Anmeldung war erfolgreich!</h5>
+    }
+
+    @if (Datumungültig)
+    {
+        <h5>Datum darf nicht in der Zukunft liegen!</h5>
+    }
+}
+
+
+@code {
+
+    List<ImpfModel> impfen;
+
+    private string Vorname;
+    private string Nachname;
+    private DateTime Geburtsdatum = DateTime.Today;
+    private DateTime _heute = DateTime.Today;
+    private int zeitraum;
+
+    private bool Anmeldungerfolgt = false;
+    private bool Datumungültig = false;
+
+    private string queryID;
+    private DateTime queryGebDat;
+
+
+
+    private async Task InsertData(string Vorname, string Nachname, DateTime Geburtsdatum, int zeitraum)
+    {
+        if (zeitraum == 0 || Vorname == null || Nachname == null || Geburtsdatum == null)
+        {
+            return;
+        }
+
+        if (Geburtsdatum.CompareTo(_heute) > 0)
+        {
+            return;
+        }
+
+        DateTime startDate;
+        DateTime endDate;
+        DateTime today = DateTime.Today;
+        int currentMonth = today.Month;
+        int currentYear = today.Year;
+        int lastDayOfCurrentMonth = DateTime.DaysInMonth(currentYear, currentMonth);
+
+        var lastMonthDt = DateTime.Today.AddMonths(-1);
+        int lastMonthMonth = lastMonthDt.Month;
+        int lastMonthYear = lastMonthDt.Year;
+        int lastMonthLastDay = DateTime.DaysInMonth(lastMonthYear, lastMonthMonth);
+
+        string sql;
+
+        if (zeitraum == 1)
+        {
+            startDate = new DateTime(currentYear, currentMonth, 1);
+            endDate = new DateTime(currentYear, currentMonth, lastDayOfCurrentMonth);
+
+            //sql = "select * from diagnoses where per_id = @per_id AND diagnoseDate >= @startDate AND diagnoseDate <= @endDate";
+
+            //await _data.SaveData(sql, new { per_id = 1, startDate = startDate, endDate = endDate }, _config.GetConnectionString("default"));
+            //await LoadAllData();
+        }
+        else if (zeitraum == 2)
+        {
+            startDate = new DateTime(lastMonthYear, lastMonthMonth, 1);
+            endDate = new DateTime(lastMonthYear, lastMonthMonth, lastMonthLastDay);
+
+            //sql = "select * from diagnoses where per_id = @per_id AND diagnoseDate >= @startDate AND diagnoseDate <= @endDate";
+
+            //await _data.SaveData(sql, new { per_id = 1, startDate = startDate, endDate = endDate }, _config.GetConnectionString("default"));
+            //await LoadAllData();
+        }
+        else if (zeitraum == 3)
+        {
+            //sql = "select * from diagnoses where per_id = @per_id";
+
+            //await _data.SaveData(sql, new { per_id = 1 }, _config.GetConnectionString("default"));
+            //await LoadAllData();
+        }
+    }
+
+
+
+    private async Task LoadAllData()
+    {
+        string sql = "select * from person";
+
+        impfen = await _data.LoadData<ImpfModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = UriHelper.ToAbsoluteUri(UriHelper.Uri);
+
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("Vorname", out var param))
+        {
+            queryID = param.First();
+        }
+
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("Geburtsdatum", out param))
+        {
+            queryGebDat = DateTime.Parse(param.First());
+        }
+
+        if (queryGebDat.CompareTo(_heute) > 0)
+        {
+            Datumungültig = true;
+        }
+
+        await LoadAllData();
+        if (queryID != null && !Datumungültig)
+        {
+            Anmeldungerfolgt = true;
+        }
+    }
+}
