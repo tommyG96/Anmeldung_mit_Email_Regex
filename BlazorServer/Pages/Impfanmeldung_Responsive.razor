@@ -125,7 +125,7 @@ else
                     <label for="Geburtsdatum">Geburtsdatum: </label>
                 </div>
                 <div class="col-75">
-                    <input @bind="Geburtsdatum" type="date" id="Geburtsdatum" name="Geburtsdatum" required>
+                    <input @bind="Geburtsdatum" type="date" id="Geburtsdatum" name="Geburtsdatum" max="@_heute" required>
                 </div>
             </div>
             <div class="row">
@@ -138,10 +138,20 @@ else
             </div>
             <br />
             <div class="row">
-                <input type="submit" @onclick="@(async () => await InsertData(Vorname, Nachname, Geburtsdatum, Sozialversicherungsnummer))"/>
+                <input type="submit" @onclick="@(async () => await InsertData(Vorname, Nachname, Geburtsdatum, Sozialversicherungsnummer))" />
             </div>
         </form>
     </div>
+
+    @if (Anmeldungerfolgt)
+    {
+        <h5>Die Anmeldung war erfolgreich!</h5>
+    }
+
+    @if (Datumungültig)
+    {
+        <h5>Datum darf nicht in der Zukunft liegen!</h5>
+    }
 }
 
 
@@ -152,15 +162,25 @@ else
     private string Vorname;
     private string Nachname;
     private DateTime Geburtsdatum = DateTime.Today;
+    private DateTime _heute = DateTime.Today;
     private string Sozialversicherungsnummer;
 
+    private bool Anmeldungerfolgt = false;
+    private bool Datumungültig = false;
+
     private string queryID;
+    private DateTime queryGebDat;
 
 
 
     private async Task InsertData(string Vorname, string Nachname, DateTime Geburtsdatum, string Sozialversicherungsnummer)
     {
         if (Sozialversicherungsnummer == null || Sozialversicherungsnummer.Length != 4 || Vorname == null || Nachname == null || Geburtsdatum == null)
+        {
+            return;
+        }
+
+        if (Geburtsdatum.CompareTo(_heute) > 0)
         {
             return;
         }
@@ -190,9 +210,20 @@ else
             queryID = param.First();
         }
 
-        //await SearchData(queryID);
-        await LoadAllData();
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("Geburtsdatum", out param))
+        {
+            queryGebDat = DateTime.Parse(param.First());
+        }
 
-        //Updatemovie = movie;
+        if (queryGebDat.CompareTo(_heute) > 0)
+        {
+            Datumungültig = true;
+        }
+
+        await LoadAllData();
+        if (queryID != null && !Datumungültig)
+        {
+            Anmeldungerfolgt = true;
+        }
     }
 }
