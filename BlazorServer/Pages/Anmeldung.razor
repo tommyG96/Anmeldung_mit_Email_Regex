@@ -1,0 +1,87 @@
+﻿@page "/anmeldung"
+
+@using DataLibrary
+@using Microsoft.AspNetCore.WebUtilities
+@using BlazorServer.Models
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration _config
+@inject NavigationManager UriHelper
+@inject IDataAccess _data
+
+
+<h3>Anmeldung</h3>
+
+
+
+<style>
+    table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    td, th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #dddddd;
+    }
+</style>
+<br />
+<br />
+
+<form>
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email"
+           pattern="^[a-zA-Z0-9._+-]+&#64;[a-zA-Z0-9.-]+\.[a-zA-Z]{2,9}$" title="zum Beipiel: max.mustermann@musterprovider.com" required>
+    <br />
+    <label for="pwd">Password:</label>
+    <input type="password" id="pwd" name="pwd"
+           pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+           title="Passwort muss mindestens einen Groß-& Kleinbuchstaben und eine Zahl enthalten, und mindestens 8 Zeichen lang sein" required>
+    <input type="submit">
+    <br>
+
+    @if (Anmeldungerfolgt == true)
+    {
+        <h5>Die Anmeldung war erfolgreich!</h5>
+        <h7>Sie sind angemeldet als: @QueryEmail</h7>
+    }
+
+
+</form>
+<br>
+<br>
+
+@code {
+
+    private string QueryEmail;
+    private string QueryPassword;
+
+    private bool Anmeldungerfolgt = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = UriHelper.ToAbsoluteUri(UriHelper.Uri);
+
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("email", out var param))
+        {
+            QueryEmail = param.First();
+        }
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("pwd", out param))
+        {
+            QueryPassword = param.First();
+        }
+        if (QueryEmail != null && QueryPassword != null)
+        {
+            Anmeldungerfolgt = true;
+        }
+        else
+        {
+            Anmeldungerfolgt = false;
+        }
+    }
+}
