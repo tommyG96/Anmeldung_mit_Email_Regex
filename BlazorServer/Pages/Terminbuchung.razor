@@ -34,62 +34,140 @@ else
         tr:nth-child(even) {
             background-color: #dddddd;
         }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        input[type=text], input[type=email], input[type=password], input[type=datetime-local], input[type=radio], select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        label {
+            padding: 12px 12px 12px 0;
+            display: inline-block;
+        }
+
+        input[type=submit] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
+        }
+
+            input[type=submit]:hover {
+                background-color: #45a049;
+            }
+
+        .container {
+            width: 100%;
+            border-radius: 5px;
+            background-color: #f2f2f2;
+            padding: 20px;
+        }
+
+        .col-25 {
+            float: left;
+            width: 25%;
+            margin-top: 6px;
+        }
+
+        .col-75 {
+            float: left;
+            width: 75%;
+            margin-top: 6px;
+        }
+
+        /* Clear floats after the columns */
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        /* Responsive layout - when the screen is less than 600px wide, make the two columns stack on top of each other instead of next to each other */
+        @@media screen and (max-width: 600px) {
+            .col-25, .col-75, input[type=submit] {
+                width: 100%;
+                margin-top: 0;
+            }
+        }
     </style>
     <br />
     <br />
+    <div style="overflow-x:auto;">
+        <table>
+            <tr>
+                <th>Personen ID</th>
+                <th>Name</th>
+                <th>Geburtsdatum</th>
+                <th>Sozialversicherungsnummer</th>
+                @*<th>Terminbuchung</th>*@
+            </tr>
+            <tr>
+                <td>
+                    @impfen.per_Id
+                </td>
+                <td>
+                    @impfen.Name
+                </td>
+                <td>
+                    @impfen.per_GebDat.ToString("dd.MM.yyyy")
+                </td>
+                <td>
+                    @impfen.per_svnr
+                </td>
+                @*<td>
 
-    <table>
-        <tr>
-            <th>Personen ID</th>
-            <th>Name</th>
-            <th>Geburtsdatum</th>
-            <th>Sozialversicherungsnummer</th>
-            @*<th>Terminbuchung</th>*@
-        </tr>
-        <tr>
-            <td>
-                @impfen.per_Id
-            </td>
-            <td>
-                @impfen.Name
-            </td>
-            <td>
-                @impfen.per_GebDat.ToString("dd.MM.yyyy")
-            </td>
-            <td>
-                @impfen.per_svnr
-            </td>
-            @*<td>
+                        <a class="btn btn-dark" href="@("/details?PersonenID=" + i.per_Id.ToString())">Zum Impftermin</a>
 
-                    <a class="btn btn-dark" href="@("/details?PersonenID=" + i.per_Id.ToString())">Zum Impftermin</a>
-
-                </td>*@
-        </tr>
-    </table>
-
+                    </td>*@
+            </tr>
+        </table>
+    </div>
     <br>
     <br>
 
     // bind und value --> Onchange + value
-
-        <h5>Geben Sie hier Ihren gewünschten Impftermin ein:</h5>
-        <input @onchange="@(( args ) => Adrauswahl.imp_Termin = Convert.ToDateTime(args.Value))" type="datetime-local" id="Impftermin" name="Impftermin" value="@Impftermin.ToString("yyyy-MM-ddTHH:mm")">
-        <br>
-        <br>
-        <h5>Wählen Sie hier die gewünschte Impfstrasse aus:</h5>
+    <div class="container">
+        @*<h5>Geben Sie hier Ihren gewünschten Impftermin ein:</h5>*@
+        <div class="row">
+            <div class="col-25">
+                <label for="Impftermin">Impftermin:</label>
+            </div>
+            <div class="col-75">
+                <input @onchange="@((args) => Adrauswahl.imp_Termin = Convert.ToDateTime(args.Value))" type="datetime-local" id="Impftermin" name="Impftermin" value="@Impftermin.ToString("yyyy-MM-ddTHH:mm")">
+            </div>
+        </div>
+        <br />
+        <h4>Impfstrasse:</h4>
         @foreach (var i in adresse)
         {
-            <label for="@i.adr_Id"><input @onchange="@((args) => Adrauswahl.adr_Id = Int32.Parse(args.Value.ToString()))" id="@i.adr_Id" value="@i.adr_Id" type="radio" name="Adresse">@i.Adresse</label>
-            <br>
+            <div class="row">
+                <div class="col-25">
+                    <label for="@i.adr_Id">@i.Adresse</label>
+                </div>
+                <div class="col-75">
+                    <input @onchange="@((args) => Adrauswahl.adr_Id = Int32.Parse(args.Value.ToString()))" id="@i.adr_Id" value="@i.adr_Id" type="radio" name="Adresse">
+                </div>
+            </div>
         }
-        <button class="btn btn-warning" @onclick="@(async () => await InsertData(impfen.per_Id, Adrauswahl.adr_Id, Adrauswahl.imp_Termin))">Speichern</button>
-
-    if (Datumrichtig == false)
-    {
-        <h7>Dieser Termin ist leider nicht Möglich</h7>
-    }
+        <div class="row">
+            <button class="btn btn-warning" @onclick="@(async () => await InsertData(impfen.per_Id, Adrauswahl.adr_Id, Adrauswahl.imp_Termin))">Speichern</button>
+        </div>
+        @if (Datumrichtig == false)
+        {
+            <h7>Dieser Termin ist leider nicht Möglich</h7>
+        }
+    </div>
 }
-
 @code {
 
     ImpfModel impfen;

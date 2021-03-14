@@ -8,10 +8,7 @@
 @inject NavigationManager UriHelper
 @inject IDataAccess _data
 
-
 <h3>Anmeldung</h3>
-
-
 
 <style>
     table {
@@ -29,30 +26,109 @@
     tr:nth-child(even) {
         background-color: #dddddd;
     }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    input[type=text], input[type=email], input[type=password], select, textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    label {
+        padding: 12px 12px 12px 0;
+        display: inline-block;
+    }
+
+    input[type=submit] {
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        float: right;
+    }
+
+        input[type=submit]:hover {
+            background-color: #45a049;
+        }
+
+    .container {
+        width: 100%;
+        border-radius: 5px;
+        background-color: #f2f2f2;
+        padding: 20px;
+    }
+
+    .col-25 {
+        float: left;
+        width: 25%;
+        margin-top: 6px;
+    }
+
+    .col-75 {
+        float: left;
+        width: 75%;
+        margin-top: 6px;
+    }
+
+    /* Clear floats after the columns */
+    .row:after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    /* Responsive layout - when the screen is less than 600px wide, make the two columns stack on top of each other instead of next to each other */
+    @@media screen and (max-width: 600px) {
+        .col-25, .col-75, input[type=submit] {
+            width: 100%;
+            margin-top: 0;
+        }
+    }
+  
+
 </style>
 <br />
 <br />
-
-<form>
-    <label for="email">Email:</label>
-    <input type="email" id="email" name="email"
-           pattern="^[a-zA-Z0-9._+-]+&#64;[a-zA-Z0-9.-]+\.[a-zA-Z]{2,9}$" title="zum Beipiel: max.mustermann@musterprovider.com" required>
-    <br />
-    <label for="pwd">Password:</label>
-    <input type="password" id="pwd" name="pwd"
-           pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
-           title="Passwort muss mindestens einen Groß-& Kleinbuchstaben und eine Zahl enthalten, und mindestens 8 Zeichen lang sein" required>
-    <input type="submit">
-    <br>
-
-    @if (Anmeldungerfolgt == true)
-    {
-        <h5>Die Anmeldung war erfolgreich!</h5>
-        <h7>Sie sind angemeldet als: @QueryEmail</h7>
-    }
-
-
-</form>
+<div class="container">
+    <form>
+        <div class="row">
+            <div class="col-25">
+                <label for="email">Email:</label>
+            </div>
+            <div class="col-75">
+                <input type="email" id="email" name="email" placeholder="Ihre Email Adresse"
+                       pattern="^[a-zA-Z0-9._+-]+&#64;[a-zA-Z0-9.-]+\.[a-zA-Z]{2,9}$" title="zum Beipiel: max.mustermann@musterprovider.com" required>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-25">
+                <label for="pwd">Password:</label>
+            </div>
+            <div class="col-75">
+                <input type="password" id="pwd" name="pwd" placeholder="Ihr Passwort"
+                       pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                       title="Passwort muss mindestens einen Groß-& Kleinbuchstaben und eine Zahl enthalten, und mindestens 8 Zeichen lang sein" required>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <input type="submit" value="Submit">
+        </div>
+        <br>
+        @if (Anmeldungerfolgt == true)
+        {
+            <h5>Die Anmeldung war erfolgreich!</h5>
+            <h7>Sie sind angemeldet als: @QueryEmail</h7>
+        }
+    </form>
+</div>
 <br>
 <br>
 
